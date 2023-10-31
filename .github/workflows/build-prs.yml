@@ -26,12 +26,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup with Gradle
+      - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
-        with:
-          arguments: setup --stacktrace
 
-      - name: Build with Gradle
-        uses: gradle/gradle-build-action@v2
-        with:
-          arguments: build --stacktrace
+      - name: Run NeoForge setup
+        run: ./gradlew setup --stacktrace
+
+      - name: Run NeoForge build
+        run: ./gradlew build --stacktrace
