@@ -1,6 +1,10 @@
 --- a/net/minecraft/world/item/crafting/CraftingRecipeCodecs.java
 +++ b/net/minecraft/world/item/crafting/CraftingRecipeCodecs.java
-@@ -18,7 +_,8 @@
+@@ -15,10 +_,12 @@
+       BuiltInRegistries.ITEM.byNameCodec(),
+       p_301330_ -> p_301330_ == Items.AIR ? DataResult.error(() -> "Crafting result must not be minecraft:air") : DataResult.success(p_301330_)
+    );
++   // TODO: add attachment support here
     public static final Codec<ItemStack> ITEMSTACK_OBJECT_CODEC = RecordCodecBuilder.create(
        p_301292_ -> p_301292_.group(
                 ITEM_NONAIR_CODEC.fieldOf("item").forGetter(ItemStack::getItem),
