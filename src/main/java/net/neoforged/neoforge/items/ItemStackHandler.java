@@ -80,7 +80,7 @@ public class ItemStackHandler implements IItemHandler, IItemHandlerModifiable, I
 
         if (!simulate) {
             if (existing.isEmpty()) {
-                this.stacks.set(slot, reachedLimit ? ItemHandlerHelper.copyStackWithSize(stack, limit) : stack);
+                this.stacks.set(slot, reachedLimit ? ItemHandlerHelper.copyStackWithSize(stack, limit) : stack.copy());
             } else {
                 existing.grow(reachedLimit ? limit : stack.getCount());
             }
