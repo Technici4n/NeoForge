@@ -295,6 +295,36 @@ configurations {
             javaComponent.addVariantsFromConfiguration(it) {}
         }
     }
+    modDevLibraries {
+        canBeResolved = false
+        canBeConsumed = true
+        afterEvaluate {
+            extendsFrom userDevCompileOnly, installerLibraries, moduleOnly
+        }
+        attributes {
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
+        }
+        outgoing {
+            capability("net.neoforged:neoforge-moddev-libraries:${project.version}")
+        }
+        javaComponent.addVariantsFromConfiguration(it) {}
+    }
+    modDevModulePath {
+        canBeResolved = false
+        canBeConsumed = true
+        afterEvaluate {
+            extendsFrom moduleOnly
+        }
+        attributes {
+            attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
+            attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
+        }
+        outgoing {
+            capability("net.neoforged:neoforge-moddev-module-path:${project.version}")
+        }
+        javaComponent.addVariantsFromConfiguration(it) {}
+    }
 }
 
 afterEvaluate {
