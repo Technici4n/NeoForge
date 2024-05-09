@@ -230,12 +230,6 @@ javaComponent.withVariantsFromConfiguration(configurations.runtimeElements) {
     it.skip()
 }
 
-interface DataType extends Named {
-    Attribute<DataType> DATA_TYPE_ATTRIBUTE = Attribute.of("net.neoforged.datatype", DataType.class);
-    String NEOFORGE_MODDEV_BUNDLE = "neoforge-moddev-bundle";
-    String NEOFORGE_MODDEV_CONFIG = "neoforge-moddev-config";
-}
-
 configurations {
     modDevBundle {
         canBeResolved = false
@@ -243,7 +237,9 @@ configurations {
         attributes {
             attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, "data"))
             attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
-            attribute(DataType.DATA_TYPE_ATTRIBUTE, objects.named(DataType, DataType.NEOFORGE_MODDEV_BUNDLE))
+        }
+        outgoing {
+            capability("net.neoforged:neoforge-moddev-bundle:${project.version}")
         }
         javaComponent.addVariantsFromConfiguration(it) {} // Publish it
     }
@@ -253,7 +249,9 @@ configurations {
         attributes {
             attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, "data"))
             attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
-            attribute(DataType.DATA_TYPE_ATTRIBUTE, objects.named(DataType, DataType.NEOFORGE_MODDEV_CONFIG))
+        }
+        outgoing {
+            capability("net.neoforged:neoforge-moddev-config:${project.version}")
         }
         javaComponent.addVariantsFromConfiguration(it) {} // Publish it
     }
