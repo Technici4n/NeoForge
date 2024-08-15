@@ -23,19 +23,14 @@ abstract class DownloadAssetsTask extends NeoFormRuntimeTask {
     @OutputFile
     abstract RegularFileProperty getAssetPropertiesFile();
 
-    @InputFile
-    @Optional
-    abstract RegularFileProperty getArtifactManifestFile();
-
     @TaskAction
     public void createArtifacts() {
         var artifactId = getNeoFormArtifact().get();
 
         run(List.of(
-                "--artifact-manifest", getArtifactManifestFile().get().getAsFile().getAbsolutePath(),
                 "download-assets",
                 "--neoform", artifactId,
-                "--output-properties-to", getAssetPropertiesFile().get().getAsFile().getAbsolutePath()
+                "--write-properties", getAssetPropertiesFile().get().getAsFile().getAbsolutePath()
         ));
     }
 }

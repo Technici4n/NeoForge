@@ -12,6 +12,7 @@ import net.neoforged.moddevgradle.internal.PrepareRun;
 import net.neoforged.moddevgradle.internal.RunGameTask;
 import net.neoforged.moddevgradle.internal.RunUtils;
 import net.neoforged.moddevgradle.internal.WriteLegacyClasspath;
+import net.neoforged.moddevgradle.internal.utils.DependencyUtils;
 import net.neoforged.moddevgradle.internal.utils.ExtensionUtils;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -91,7 +92,8 @@ public class NeoDevPlugin implements Plugin<Project> {
         var rawNeoFormVersion = project.getProviders().gradleProperty("neoform_version");
         var minecraftVersion = project.getProviders().gradleProperty("minecraft_version");
         var neoFormVersion = minecraftVersion.zip(rawNeoFormVersion, (mc, nf) -> mc + "-" + nf);
-        var neoFormRuntimeVersion = project.getProviders().provider(() -> "0.1.48");
+        // TODO: pull from MDG
+        var neoFormRuntimeVersion = project.getProviders().provider(() -> "1.0.3");
 
         var neoFormRuntimeConfig = configurations.create("neoFormRuntime", files -> {
             files.setCanBeConsumed(false);
@@ -149,7 +151,8 @@ public class NeoDevPlugin implements Plugin<Project> {
         var minecraftVersion = project.getProviders().gradleProperty("minecraft_version");
         var neoForgeVersion = project.provider(() -> (String) project.getVersion()); // TODO: is this correct?
         var neoFormVersion = minecraftVersion.zip(rawNeoFormVersion, (mc, nf) -> mc + "-" + nf);
-        var neoFormRuntimeVersion = project.getProviders().provider(() -> "0.1.31");
+        // TODO: pull from MDG
+        var neoFormRuntimeVersion = project.getProviders().provider(() -> "1.0.3");
 
         var extension = project.getExtensions().create(NeoForgeExtension.NAME, NeoForgeExtension.class);
 
@@ -269,11 +272,19 @@ public class NeoDevPlugin implements Plugin<Project> {
 
         var ideSyncTask = tasks.register("neoForgeIdeSync");
 
+        // TODO: Do we even want that?
+        var additionalClasspath = configurations.create("additionalRuntimeClasspath", spec -> {
+            spec.setDescription("Contains dependencies of every run, that should not be considered boot classpath modules.");
+            spec.setCanBeResolved(true);
+            spec.setCanBeConsumed(false);
+        });
+
         Map<RunModel, TaskProvider<PrepareRun>> prepareRunTasks = new IdentityHashMap<>();
-        extension.getRuns().configureEach(run -> {
+        extension.getRuns().all(run -> {
             var prepareRunTask = ModDevPlugin.setupRunInGradle(
                     project,
                     neoDevBuildDir,
+                    ideSyncTask,
                     run,
                     modulesConfiguration,
                     writeNeoDevConfig,
@@ -285,6 +296,7 @@ public class NeoDevPlugin implements Plugin<Project> {
                         });
                         spec.extendsFrom(installerLibrariesConfiguration, modulesConfiguration, userDevCompileOnlyConfiguration);
                     },
+                    additionalClasspath,
                     createArtifacts.get().getResourcesArtifact(),
                     downloadAssets.flatMap(DownloadAssetsTask::getAssetPropertiesFile));
             prepareRunTasks.put(run, prepareRunTask);
@@ -309,7 +321,7 @@ public class NeoDevPlugin implements Plugin<Project> {
 
     private Provider<List<String>> configurationToGavList(Configuration configuration) {
         return configuration.getIncoming().getArtifacts().getResolvedArtifacts().map(results -> {
-            return results.stream().map(ModDevPlugin::guessMavenGav).toList();
+            return results.stream().map(DependencyUtils::guessMavenGav).toList();
         });
     }
 
@@ -320,6 +332,7 @@ public class NeoDevPlugin implements Plugin<Project> {
         var neoForgeProject = project.getRootProject().getChildProjects().get("neoforge");
 
         var dependencyFactory = project.getDependencyFactory();
+        var configurations = project.getConfigurations();
         var tasks = project.getTasks();
         var neoDevBuildDir = project.getLayout().getBuildDirectory().dir("neodev");
 
@@ -348,11 +361,19 @@ public class NeoDevPlugin implements Plugin<Project> {
 
         var ideSyncTask = tasks.register("neoForgeIdeSync");
 
+        // TODO: Do we even want that?
+        var additionalClasspath = configurations.create("additionalRuntimeClasspath", spec -> {
+            spec.setDescription("Contains dependencies of every run, that should not be considered boot classpath modules.");
+            spec.setCanBeResolved(true);
+            spec.setCanBeConsumed(false);
+        });
+
         Map<RunModel, TaskProvider<PrepareRun>> prepareRunTasks = new IdentityHashMap<>();
-        extension.getRuns().configureEach(run -> {
+        extension.getRuns().all(run -> {
             var prepareRunTask = ModDevPlugin.setupRunInGradle(
                     project,
                     neoDevBuildDir,
+                    ideSyncTask,
                     run,
                     modulesConfiguration,
                     writeNeoDevConfig,
@@ -368,13 +389,15 @@ public class NeoDevPlugin implements Plugin<Project> {
                             set.add(projectDep(dependencyFactory, neoForgeProject, "userdevCompileOnly"));
                         });
                     },
+                    additionalClasspath,
                     createArtifacts.get().getResourcesArtifact(),
                     downloadAssets.flatMap(DownloadAssetsTask::getAssetPropertiesFile));
             prepareRunTasks.put(run, prepareRunTask);
             ideSyncTask.configure(task -> task.dependsOn(prepareRunTask));
         });
 
-        ModDevPlugin.configureIntelliJModel(project, ideSyncTask, extension, prepareRunTasks);
+        // TODO this breaks, I don't understand why!
+        // ModDevPlugin.configureIntelliJModel(project, ideSyncTask, extension, prepareRunTasks);
 
         // TODO: configure eclipse
     }

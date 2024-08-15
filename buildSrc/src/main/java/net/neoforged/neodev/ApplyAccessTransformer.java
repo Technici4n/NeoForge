@@ -19,6 +19,7 @@ import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 
 abstract class ApplyAccessTransformer extends JavaExec {
     @InputFile
@@ -46,7 +47,8 @@ abstract class ApplyAccessTransformer extends JavaExec {
         try {
             FileUtils.writeLinesSafe(
                     getLibrariesFile().getAsFile().get().toPath(),
-                    getLibraries().getFiles().stream().map(File::getAbsolutePath).toList());
+                    getLibraries().getFiles().stream().map(File::getAbsolutePath).toList(),
+                    StandardCharsets.UTF_8);
         } catch (IOException exception) {
             throw new UncheckedIOException("Failed to write libraries for JST.", exception);
         }

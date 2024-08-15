@@ -23,7 +23,9 @@ repositories {
 dependencies {
     // TODO: is this leaking in the POM? (most likely yes)
     // TODO: does this need to be changed back to runtimeDependencies?
-    implementation project(':neoforge')
+    // TODO: should use attributes to resolve the right variant instead of hardcoding
+    compileOnly project(path: ':neoforge', configuration: 'apiElements')
+    runtimeOnly project(path: ':neoforge', configuration: 'runtimeElements')
 
     compileOnly(platform("org.junit:junit-bom:${project.jupiter_api_version}"))
     compileOnly "org.junit.jupiter:junit-jupiter-params"

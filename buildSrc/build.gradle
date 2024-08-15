@@ -27,6 +27,7 @@ repositories {
 dependencies {
     implementation "net.neoforged:moddev-gradle:${project.moddev_plugin_version}"
 
+    implementation "com.google.code.gson:gson:2.11.0"
     implementation "codechicken:DiffPatch:${project.diffpatch_version}"
 }
 

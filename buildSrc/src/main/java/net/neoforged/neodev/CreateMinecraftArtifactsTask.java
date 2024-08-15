@@ -17,10 +17,6 @@ abstract class CreateMinecraftArtifactsTask extends NeoFormRuntimeTask {
     @Inject
     public CreateMinecraftArtifactsTask() {}
 
-    @InputFile
-    @Optional
-    abstract RegularFileProperty getArtifactManifestFile();
-
     @Input
     abstract Property<String> getNeoFormArtifact();
 
@@ -42,7 +38,6 @@ abstract class CreateMinecraftArtifactsTask extends NeoFormRuntimeTask {
                 args,
                 "run",
                 "--neoform", "net.neoforged:neoform:%s@zip".formatted(artifactId),
-                "--artifact-manifest", getArtifactManifestFile().get().getAsFile().getAbsolutePath(),
                 "--dist", "joined",
                 "--write-result", "sources:" + getSourcesArtifact().get().getAsFile().getAbsolutePath(),
                 "--write-result", "clientResources:" + getResourcesArtifact().get().getAsFile().getAbsolutePath()

@@ -14,6 +14,7 @@ import org.gradle.api.tasks.TaskAction;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -126,7 +127,9 @@ abstract class WriteUserDevConfig extends DefaultTask {
 
         FileUtils.writeStringSafe(
                 getUserDevConfig().getAsFile().get().toPath(),
-                new GsonBuilder().setPrettyPrinting().create().toJson(config));
+                new GsonBuilder().setPrettyPrinting().create().toJson(config),
+                // TODO: Not sure what this should be? Most likely the file is ASCII.
+                StandardCharsets.UTF_8);
     }
 
     private enum RunType {

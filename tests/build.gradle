@@ -72,7 +72,7 @@ neoForge {
             sourceSet sourceSets.main
         }
         testframework {
-            sourceSet project(":testframework").sourceSets.main, project(":testframework")
+            sourceSet project(":testframework").sourceSets.main
         }
     }
 
