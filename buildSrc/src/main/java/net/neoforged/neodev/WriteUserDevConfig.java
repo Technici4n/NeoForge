@@ -1,7 +1,6 @@
 package net.neoforged.neodev;
 
 import com.google.gson.GsonBuilder;
-import net.neoforged.moddevgradle.internal.UserDevConfig;
 import net.neoforged.moddevgradle.internal.UserDevRunType;
 import net.neoforged.moddevgradle.internal.utils.FileUtils;
 import org.gradle.api.DefaultTask;
@@ -22,8 +21,13 @@ import java.util.List;
 import java.util.Map;
 
 abstract class WriteUserDevConfig extends DefaultTask {
+    private static final String BINPATCHER_VERSION = "1.1.1"; // TODO: move somewhere else
+
     @Inject
     public WriteUserDevConfig() {}
+
+    @Input
+    abstract Property<Boolean> getForNeoDev();
 
     @Input
     abstract Property<String> getFmlVersion();
@@ -35,13 +39,16 @@ abstract class WriteUserDevConfig extends DefaultTask {
     abstract Property<String> getNeoForgeVersion();
 
     @Input
-    abstract Property<String> getNeoFormVersion();
+    abstract Property<String> getRawNeoFormVersion();
 
     @Input
     abstract ListProperty<String> getLibraries();
 
     @Input
     abstract ListProperty<String> getModules();
+
+    @Input
+    abstract ListProperty<String> getTestLibraries();
 
     @Input
     abstract ListProperty<String> getIgnoreList();
@@ -52,23 +59,27 @@ abstract class WriteUserDevConfig extends DefaultTask {
     @TaskAction
     public void writeUserDevConfig() throws IOException {
         var config = new UserDevConfig(
-                "net.neoforged:neoform:" + getNeoFormVersion().get() + "@zip",
+                2,
+                "net.neoforged:neoform:" + getRawNeoFormVersion().get() + "@zip",
                 "ats/",
                 "joined.lzma",
+                new BinpatcherConfig(
+                        "net.minecraftforge:binarypatcher:%s:fatjar".formatted(BINPATCHER_VERSION),
+                        List.of("--clean", "{clean}", "--output", "{output}", "--apply", "{patch}")),
                 "patches/",
-                "", // TODO sources
-                "", // TODO universal
+                "net.neoforged:neoforge:%s:sources".formatted(getNeoForgeVersion().get()),
+                "net.neoforged:neoforge:%s:universal".formatted(getNeoForgeVersion().get()),
                 getLibraries().get(),
                 getModules().get(),
+                getTestLibraries().get(),
                 new LinkedHashMap<>());
 
         for (var runType : RunType.values()) {
-            // TODO: for moddev it is "forgeclientuserdev" et al
             var launchTarget = switch (runType) {
-                case CLIENT -> "forgeclientdev";
-                case DATA -> "forgedatadev";
-                case GAME_TEST_SERVER, SERVER -> "forgeserverdev";
-            };
+                case CLIENT -> "forgeclient";
+                case DATA -> "forgedata";
+                case GAME_TEST_SERVER, SERVER -> "forgeserver";
+            } + (getForNeoDev().get() ? "dev" : "userdev");
 
             List<String> args = new ArrayList<>();
             Collections.addAll(args,
@@ -77,7 +88,7 @@ abstract class WriteUserDevConfig extends DefaultTask {
                     "--fml.fmlVersion", getFmlVersion().get(),
                     "--fml.mcVersion", getMinecraftVersion().get(),
                     "--fml.neoForgeVersion", getNeoForgeVersion().get(),
-                    "--fml.neoFormVersion", getNeoFormVersion().get());
+                    "--fml.neoFormVersion", getRawNeoFormVersion().get());
 
             if (runType == RunType.CLIENT) {
                 // TODO: this is copied from NG but shouldn't it be the MC version?
@@ -127,7 +138,7 @@ abstract class WriteUserDevConfig extends DefaultTask {
 
         FileUtils.writeStringSafe(
                 getUserDevConfig().getAsFile().get().toPath(),
-                new GsonBuilder().setPrettyPrinting().create().toJson(config),
+                new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create().toJson(config),
                 // TODO: Not sure what this should be? Most likely the file is ASCII.
                 StandardCharsets.UTF_8);
     }
@@ -145,3 +156,21 @@ abstract class WriteUserDevConfig extends DefaultTask {
         }
     }
 }
+
+record UserDevConfig(
+        int spec,
+        String mcp,
+        String ats,
+        String binpatches,
+        BinpatcherConfig binpatcher,
+        String patches,
+        String sources,
+        String universal,
+        List<String> libraries,
+        List<String> modules,
+        List<String> testLibraries,
+        Map<String, UserDevRunType> runs) {}
+
+record BinpatcherConfig(
+        String version,
+        List<String> args) {}

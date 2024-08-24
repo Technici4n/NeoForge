@@ -76,6 +76,9 @@ configurations {
         canBeResolved = true
         canBeConsumed = true
     }
+    installerLibraries {
+        extendsFrom installer
+    }
     moduleOnly {
         // TODO: shouldn't have both on
         canBeResolved = true
@@ -147,13 +150,11 @@ dependencies {
     installer "org.apache.logging.log4j:log4j-api:${project.log4j_version}"
     installer "org.apache.logging.log4j:log4j-core:${project.log4j_version}"
 
+    installerLibraries "net.neoforged:neoform:${project.minecraft_version}-${project.neoform_version}@zip"
+
     compileOnly "org.jetbrains:annotations:${project.jetbrains_annotations_version}"
 
-    // TODO jarjar
-    userdevCompileOnly "io.github.llamalad7:mixinextras-neoforge:${project.mixin_extras_version}"
-//    userdevCompileOnly jarJar("io.github.llamalad7:mixinextras-neoforge:${project.mixin_extras_version}"), {
-//        jarJar.ranged(it, "[${project.mixin_extras_version},)")
-//    }
+    userdevCompileOnly jarJar("io.github.llamalad7:mixinextras-neoforge:${project.mixin_extras_version}")
 
 //    userdevTestImplementation("net.neoforged.fancymodloader:junit-fml:${project.fancy_mod_loader_version}")
 }
@@ -231,30 +232,7 @@ neoForge {
     }
 }
 
-//launcherProfile {
-//    arguments {
-//        game '--fml.neoForgeVersion'
-//        game project.version
-//        game '--fml.fmlVersion'
-//        game project.fancy_mod_loader_version
-//        game '--fml.mcVersion'
-//        game project.minecraft_version
-//        game '--fml.neoFormVersion'
-//        game project.neoform_version
-//    }
-//}
-//
 //userdevProfile {
-//    runTypes.configureEach {
-//        argument '--fml.neoForgeVersion'
-//        argument project.version
-//        argument '--fml.fmlVersion'
-//        argument project.fancy_mod_loader_version
-//        argument '--fml.mcVersion'
-//        argument project.minecraft_version
-//        argument '--fml.neoFormVersion'
-//        argument project.neoform_version
-//    }
 //    additionalTestDependencyArtifactCoordinate "net.neoforged:testframework:${project.version}"
 //}
 
@@ -367,9 +345,7 @@ configurations {
     modDevApiElements {
         canBeResolved = false
         canBeConsumed = true
-        afterEvaluate {
-            extendsFrom userdevCompileOnly, installerLibraries, moduleOnly
-        }
+        extendsFrom userdevCompileOnly, installerLibraries, moduleOnly
         attributes {
             attribute(Category.CATEGORY_ATTRIBUTE, objects.named(Category, Category.LIBRARY))
             attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling, Bundling.EXTERNAL))
@@ -462,30 +438,26 @@ processResources {
     }
 }
 
-//afterEvaluate {
-//    artifacts {
-//        modDevBundle(userdevJar) {
-//            setClassifier("userdev") // Legacy
-//        }
-//        modDevConfig(createUserdevJson.output) {
-//            builtBy(createUserdevJson)
-//            setClassifier("moddev-config")
-//        }
-//        universalJar(signUniversalJar.output) {
-//            builtBy(signUniversalJar)
-//            setClassifier("universal")
-//        }
-//        installerJar(signInstallerJar.output) {
-//            builtBy(signInstallerJar)
-//            setClassifier("installer")
-//        }
-//        changelog(createChangelog.outputFile) {
-//            builtBy(createChangelog)
-//            setClassifier("changelog")
-//            setExtension("txt")
-//        }
+artifacts {
+    modDevBundle(userdevJar) {
+        setClassifier("userdev") // Legacy
+    }
+    modDevConfig(writeUserDevConfig.userDevConfig) {
+        setClassifier("moddev-config")
+    }
+    universalJar(universalJar) {
+        setClassifier("universal")
+    }
+//    installerJar(signInstallerJar.output) {
+//        builtBy(signInstallerJar)
+//        setClassifier("installer")
 //    }
-//}
+//    changelog(createChangelog.outputFile) {
+//        builtBy(createChangelog)
+//        setClassifier("changelog")
+//        setExtension("txt")
+//    }
+}
 
 publishing {
     publications.create('NeoForge', MavenPublication) {

@@ -29,6 +29,7 @@ dependencies {
 
     implementation "com.google.code.gson:gson:2.11.0"
     implementation "codechicken:DiffPatch:${project.diffpatch_version}"
+    implementation "net.neoforged:srgutils:1.0.0"
 }
 
 gradlePlugin {
