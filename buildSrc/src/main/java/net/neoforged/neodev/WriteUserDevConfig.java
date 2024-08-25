@@ -60,7 +60,7 @@ abstract class WriteUserDevConfig extends DefaultTask {
     public void writeUserDevConfig() throws IOException {
         var config = new UserDevConfig(
                 2,
-                "net.neoforged:neoform:" + getRawNeoFormVersion().get() + "@zip",
+                "net.neoforged:neoform:%s-%s@zip".formatted(getMinecraftVersion().get(), getRawNeoFormVersion().get()),
                 "ats/",
                 "joined.lzma",
                 new BinpatcherConfig(
@@ -70,37 +70,40 @@ abstract class WriteUserDevConfig extends DefaultTask {
                 "net.neoforged:neoforge:%s:sources".formatted(getNeoForgeVersion().get()),
                 "net.neoforged:neoforge:%s:universal".formatted(getNeoForgeVersion().get()),
                 getLibraries().get(),
-                getModules().get(),
                 getTestLibraries().get(),
-                new LinkedHashMap<>());
+                new LinkedHashMap<>(),
+                getModules().get());
 
         for (var runType : RunType.values()) {
             var launchTarget = switch (runType) {
                 case CLIENT -> "forgeclient";
                 case DATA -> "forgedata";
                 case GAME_TEST_SERVER, SERVER -> "forgeserver";
+                case JUNIT -> "forgejunit";
             } + (getForNeoDev().get() ? "dev" : "userdev");
 
             List<String> args = new ArrayList<>();
             Collections.addAll(args,
-                    "--gameDir", ".",
-                    "--launchTarget", launchTarget,
-                    "--fml.fmlVersion", getFmlVersion().get(),
-                    "--fml.mcVersion", getMinecraftVersion().get(),
-                    "--fml.neoForgeVersion", getNeoForgeVersion().get(),
-                    "--fml.neoFormVersion", getRawNeoFormVersion().get());
+                    "--launchTarget", launchTarget);
 
-            if (runType == RunType.CLIENT) {
+            if (runType == RunType.CLIENT || runType == RunType.JUNIT) {
                 // TODO: this is copied from NG but shouldn't it be the MC version?
                 Collections.addAll(args,
                         "--version", getNeoForgeVersion().get());
             }
 
-            if (runType == RunType.CLIENT || runType == RunType.DATA) {
+            if (runType == RunType.CLIENT || runType == RunType.DATA || runType == RunType.JUNIT) {
                 Collections.addAll(args,
                         "--assetIndex", "{asset_index}",
                         "--assetsDir", "{assets_root}");
             }
+
+            Collections.addAll(args,
+                    "--gameDir", ".",
+                    "--fml.fmlVersion", getFmlVersion().get(),
+                    "--fml.mcVersion", getMinecraftVersion().get(),
+                    "--fml.neoForgeVersion", getNeoForgeVersion().get(),
+                    "--fml.neoFormVersion", getRawNeoFormVersion().get());
 
             Map<String, String> systemProperties = new LinkedHashMap<>();
             systemProperties.put("java.net.preferIPv6Addresses", "system");
@@ -116,7 +119,7 @@ abstract class WriteUserDevConfig extends DefaultTask {
             }
 
             config.runs().put(runType.jsonName, new UserDevRunType(
-                    false,
+                    runType != RunType.JUNIT,
                     "cpw.mods.bootstraplauncher.BootstrapLauncher",
                     args,
                     List.of(
@@ -126,10 +129,11 @@ abstract class WriteUserDevConfig extends DefaultTask {
                             "--add-opens", "java.base/java.lang.invoke=cpw.mods.securejarhandler",
                             "--add-exports", "java.base/sun.security.util=cpw.mods.securejarhandler",
                             "--add-exports", "jdk.naming.dns/com.sun.jndi.dns=java.naming"),
-                    runType == RunType.CLIENT,
+                    runType == RunType.CLIENT || runType == RunType.JUNIT,
                     runType == RunType.GAME_TEST_SERVER || runType == RunType.SERVER,
                     runType == RunType.DATA,
                     runType == RunType.CLIENT || runType == RunType.GAME_TEST_SERVER,
+                    runType == RunType.JUNIT,
                     Map.of(
                             "MOD_CLASSES", "{source_roots}"),
                     systemProperties
@@ -147,7 +151,8 @@ abstract class WriteUserDevConfig extends DefaultTask {
         CLIENT("client"),
         DATA("data"),
         GAME_TEST_SERVER("gameTestServer"),
-        SERVER("server");
+        SERVER("server"),
+        JUNIT("junit");
 
         private final String jsonName;
 
@@ -167,9 +172,9 @@ record UserDevConfig(
         String sources,
         String universal,
         List<String> libraries,
-        List<String> modules,
         List<String> testLibraries,
-        Map<String, UserDevRunType> runs) {}
+        Map<String, UserDevRunType> runs,
+        List<String> modules) {}
 
 record BinpatcherConfig(
         String version,

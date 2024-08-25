@@ -156,7 +156,7 @@ dependencies {
 
     userdevCompileOnly jarJar("io.github.llamalad7:mixinextras-neoforge:${project.mixin_extras_version}")
 
-//    userdevTestImplementation("net.neoforged.fancymodloader:junit-fml:${project.fancy_mod_loader_version}")
+    userdevTestImplementation("net.neoforged.fancymodloader:junit-fml:${project.fancy_mod_loader_version}")
 }
 
 //runTypes {
@@ -231,10 +231,6 @@ neoForge {
         }
     }
 }
-
-//userdevProfile {
-//    additionalTestDependencyArtifactCoordinate "net.neoforged:testframework:${project.version}"
-//}
 
 tasks.withType(Javadoc.class).configureEach {
     options.tags = [

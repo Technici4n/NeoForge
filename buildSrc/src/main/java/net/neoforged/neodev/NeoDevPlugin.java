@@ -263,12 +263,23 @@ public class NeoDevPlugin implements Plugin<Project> {
         var installerLibrariesConfiguration = configurations.create("installerLibraries");
         var modulesConfiguration = configurations.create("moduleOnly");
         var userDevCompileOnlyConfiguration = configurations.create("userdevCompileOnly");
+        var userDevTestImplementationConfiguration = configurations.create("userdevTestImplementation");
+        userDevTestImplementationConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
+
+        var devLibrariesConfiguration = configurations.create("devLibraries", files -> {
+            files.setCanBeConsumed(false);
+            files.setCanBeResolved(true);
+        });
+        devLibrariesConfiguration.shouldResolveConsistentlyWith(runtimeClasspath);
+        devLibrariesConfiguration.extendsFrom(installerLibrariesConfiguration, modulesConfiguration, userDevCompileOnlyConfiguration);
 
         var writeNeoDevConfig = tasks.register("writeNeoDevConfig", WriteUserDevConfig.class, task -> {
             task.getForNeoDev().set(true);
+            task.getUserDevConfig().set(neoDevBuildDir.map(dir -> dir.file("neodev-config.json")));
         });
         var writeUserDevConfig = tasks.register("writeUserDevConfig", WriteUserDevConfig.class, task -> {
             task.getForNeoDev().set(false);
+            task.getUserDevConfig().set(neoDevBuildDir.map(dir -> dir.file("userdev-config.json")));
         });
         for (var taskProvider : List.of(writeNeoDevConfig, writeUserDevConfig)) {
             taskProvider.configure(task -> {
@@ -276,18 +287,17 @@ public class NeoDevPlugin implements Plugin<Project> {
                 task.getMinecraftVersion().set(minecraftVersion);
                 task.getNeoForgeVersion().set(neoForgeVersion);
                 task.getRawNeoFormVersion().set(rawNeoFormVersion);
-                task.getLibraries().addAll(configurationToGavList(installerLibrariesConfiguration));
-                task.getLibraries().addAll(configurationToGavList(modulesConfiguration));
-                task.getLibraries().addAll(configurationToGavList(userDevCompileOnlyConfiguration));
+                task.getLibraries().addAll(configurationToGavList(devLibrariesConfiguration));
                 task.getModules().addAll(configurationToGavList(modulesConfiguration));
-                // TODO: add test libraries
-                // task.getTestLibraries().addAll();
+                task.getTestLibraries().addAll(configurationToGavList(userDevTestImplementationConfiguration));
+                task.getTestLibraries().add(neoForgeVersion.map(v -> "net.neoforged:testframework:" + v));
                 task.getIgnoreList().addAll(modulesConfiguration.getIncoming().getArtifacts().getResolvedArtifacts().map(results -> {
                     return results.stream().map(r -> r.getFile().getName()).toList();
                 }));
+                task.getIgnoreList().addAll(userDevCompileOnlyConfiguration.getIncoming().getArtifacts().getResolvedArtifacts().map(results -> {
+                    return results.stream().map(r -> r.getFile().getName()).toList();
+                }));
                 task.getIgnoreList().addAll("client-extra", "neoforge-");
-                // TODO: userdevCompileOnly needs to be added here too
-                task.getUserDevConfig().set(neoDevBuildDir.map(dir -> dir.file("neodev-userdev-config.json")));
             });
         }
 
