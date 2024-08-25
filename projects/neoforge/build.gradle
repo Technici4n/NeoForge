@@ -159,57 +159,6 @@ dependencies {
     userdevTestImplementation("net.neoforged.fancymodloader:junit-fml:${project.fancy_mod_loader_version}")
 }
 
-//runTypes {
-//    client {
-//        singleInstance false
-//        client true
-//
-//        arguments.addAll '--fml.neoForgeVersion', project.version
-//        arguments.addAll '--fml.fmlVersion', project.fancy_mod_loader_version
-//        arguments.addAll '--fml.mcVersion', project.minecraft_version
-//        arguments.addAll '--fml.neoFormVersion', project.neoform_version
-//    }
-//
-//    server {
-//        server true
-//
-//        arguments.addAll '--fml.neoForgeVersion', project.version
-//        arguments.addAll '--fml.fmlVersion', project.fancy_mod_loader_version
-//        arguments.addAll '--fml.mcVersion', project.minecraft_version
-//        arguments.addAll '--fml.neoFormVersion', project.neoform_version
-//    }
-//
-//    gameTestServer {
-//        from project.runTypes.server
-//
-//        gameTest true
-//    }
-//
-//    gameTestClient {
-//        from project.runTypes.client
-//
-//        gameTest true
-//    }
-//
-//    data {
-//        dataGenerator true
-//
-//        // Don't set modid here so we can reuse this runType for test datagen
-//        arguments.addAll '--fml.neoForgeVersion', project.version
-//        arguments.addAll '--fml.fmlVersion', project.fancy_mod_loader_version
-//        arguments.addAll '--fml.mcVersion', project.minecraft_version
-//        arguments.addAll '--fml.neoFormVersion', project.neoform_version
-//    }
-//
-//    junit {
-//        junit true
-//        arguments.addAll '--fml.neoForgeVersion', project.version
-//        arguments.addAll '--fml.fmlVersion', project.fancy_mod_loader_version
-//        arguments.addAll '--fml.mcVersion', project.minecraft_version
-//        arguments.addAll '--fml.neoFormVersion', project.neoform_version
-//    }
-//}
-
 neoForge {
     runs {
         configureEach {

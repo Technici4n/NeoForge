@@ -14,14 +14,6 @@ repositories {
             includeGroup "net.neoforged"
         }
     }
-    maven {
-        name 'Maven for PR #1' // https://github.com/neoforged/ModDevGradle/pull/1
-        url 'https://prmaven.neoforged.net/ModDevGradle/pr1'
-        content {
-            includeModule('net.neoforged.moddev', 'net.neoforged.moddev.gradle.plugin')
-            includeModule('net.neoforged', 'moddev-gradle')
-        }
-    }
 }
 
 dependencies {
@@ -29,7 +21,6 @@ dependencies {
 
     implementation "com.google.code.gson:gson:2.11.0"
     implementation "codechicken:DiffPatch:${project.diffpatch_version}"
-    implementation "net.neoforged:srgutils:1.0.0"
 }
 
 gradlePlugin {

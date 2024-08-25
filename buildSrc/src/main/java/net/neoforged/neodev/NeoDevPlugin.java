@@ -20,7 +20,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.dsl.DependencyFactory;
-import org.gradle.api.artifacts.dsl.RepositoryHandler;
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository;
 import org.gradle.api.attributes.Bundling;
 import org.gradle.api.plugins.BasePluginExtension;
@@ -38,7 +37,6 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class NeoDevPlugin implements Plugin<Project> {
@@ -62,29 +60,10 @@ public class NeoDevPlugin implements Plugin<Project> {
                 content.includeModule("net.neoforged", "minecraft-dependencies");
             });
         });
-        addTemporaryRepositories(project.getRepositories());
 
         project.getDependencies().attributesSchema(attributesSchema -> {
             attributesSchema.attribute(ModDevPlugin.ATTRIBUTE_DISTRIBUTION).getDisambiguationRules().add(DistributionDisambiguation.class);
             attributesSchema.attribute(ModDevPlugin.ATTRIBUTE_OPERATING_SYSTEM).getDisambiguationRules().add(OperatingSystemDisambiguation.class);
-        });
-    }
-
-    private void addTemporaryRepositories(RepositoryHandler repositories) {
-        repositories.maven(repo -> {
-            repo.setName("Temporary Repo for minecraft-dependencies");
-            repo.setUrl("https://prmaven.neoforged.net/GradleMinecraftDependencies/pr1");
-            repo.content(content -> {
-                content.includeModule("net.neoforged", "minecraft-dependencies");
-            });
-        });
-
-        repositories.maven(repo -> {
-            repo.setName("Temporary Repo for neoform");
-            repo.setUrl("https://prmaven.neoforged.net/NeoForm/pr10");
-            repo.content(content -> {
-                content.includeModule("net.neoforged", "neoform");
-            });
         });
     }
 
@@ -393,11 +372,6 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.getCleanServerJar().set(cleanArtifactsDir.map(dir -> dir.file("server.jar")));
             task.getCleanJoinedJar().set(cleanArtifactsDir.map(dir -> dir.file("joined.jar")));
             task.getMergedMappings().set(cleanArtifactsDir.map(dir -> dir.file("merged-mappings.txt")));
-        });
-        // TODO: is this even useful?
-        var invertMergedMappings = tasks.register("invertMergedMappings", InvertMappingFile.class, task -> {
-            task.getInputFile().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
-            task.getOutputFile().set(neoDevBuildDir.map(dir -> dir.file("inverted-merged-mappings.tsrg2")));
         });
 
         var fartConfig = configurations.create("fart", files -> {
