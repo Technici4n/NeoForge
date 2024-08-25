@@ -17,6 +17,7 @@ import net.neoforged.neodev.installer.CreateLauncherProfile;
 import net.neoforged.neodev.installer.InstallerProcessor;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.dsl.DependencyFactory;
@@ -26,7 +27,7 @@ import org.gradle.api.plugins.BasePluginExtension;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.Copy;
+import org.gradle.api.tasks.Sync;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
 import org.gradle.api.tasks.bundling.Jar;
@@ -117,8 +118,7 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.getResourcesArtifact().set(minecraftArtifactsDir.map(dir -> dir.file("minecraft-local-resources-aka-client-extra.jar")));
         });
 
-        // TODO: I think I'm missing a delete step
-        tasks.register("setup", Copy.class, task -> {
+        tasks.register("setup", Sync.class, task -> {
             task.from(project.zipTree(createSources.flatMap(CreateMinecraftArtifactsTask::getSourcesArtifact)));
             task.into(project.file("src/main/java/"));
         });
@@ -210,19 +210,37 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.getLibrariesFile().set(neoDevBuildDir.map(dir -> dir.file("minecraft-libraries-for-jst.txt")));
         });
 
-        var patchesFolder = project.getRootProject().file("patches");
-        var applyPatches = tasks.register("applyPatches", ApplyPatches.class, task -> {
-            task.getOriginalJar().set(applyAt.flatMap(ApplyAccessTransformer::getOutputJar));
-            task.getPatchesFolder().set(patchesFolder);
-            task.getPatchedJar().set(neoDevBuildDir.map(dir -> dir.file("artifacts/patched-sources.jar")));
-            task.getRejectsFolder().set(project.getRootProject().file("rejects"));
+        var splitMergedSources = tasks.register("splitMergedSources", SplitMergedSources.class, task -> {
+            task.getMergedJar().set(applyAt.flatMap(ApplyAccessTransformer::getOutputJar));
+            task.getCommonJar().set(neoDevBuildDir.map(dir -> dir.file("artifacts/common-sources.jar")));
+            task.getClientJar().set(neoDevBuildDir.map(dir -> dir.file("artifacts/client-sources.jar")));
         });
 
-        // TODO: I think I'm missing a delete step
-        var mcSourcesPath = project.file("src/main/java");
-        tasks.register("setup", Copy.class, task -> {
-            task.from(project.zipTree(applyPatches.flatMap(ApplyPatches::getPatchedJar)));
-            task.into(mcSourcesPath);
+        var commonPatchesFolder = project.getRootProject().file("patches");
+        var applyCommonPatches = tasks.register("applyCommonPatches", ApplyPatches.class, task -> {
+            task.getOriginalJar().set(splitMergedSources.flatMap(SplitMergedSources::getCommonJar));
+            task.getPatchesFolder().set(commonPatchesFolder);
+            task.getPatchedJar().set(neoDevBuildDir.map(dir -> dir.file("artifacts/patched-common-sources.jar")));
+            task.getRejectsFolder().set(project.getRootProject().file("rejects/common"));
+        });
+        var clientPatchesFolder = project.getRootProject().file("patches_client");
+        var applyClientPatches = tasks.register("applyClientPatches", ApplyPatches.class, task -> {
+            task.getOriginalJar().set(splitMergedSources.flatMap(SplitMergedSources::getClientJar));
+            task.getPatchesFolder().set(clientPatchesFolder);
+            task.getPatchedJar().set(neoDevBuildDir.map(dir -> dir.file("artifacts/patched-client-sources.jar")));
+            task.getRejectsFolder().set(project.getRootProject().file("rejects/client"));
+        });
+
+        var setupCommon = tasks.register("setupCommon", Sync.class, task -> {
+            task.from(project.zipTree(applyCommonPatches.flatMap(ApplyPatches::getPatchedJar)));
+            task.into(project.file("src/main/java"));
+        });
+        var setupClient = tasks.register("setupClient", Sync.class, task -> {
+            task.from(project.zipTree(applyClientPatches.flatMap(ApplyPatches::getPatchedJar)));
+            task.into(project.file("src/client/java"));
+        });
+        tasks.register("setup", Task.class, task -> {
+            task.dependsOn(setupCommon, setupClient);
         });
 
         var downloadAssets = tasks.register("downloadAssets", DownloadAssetsTask.class, task -> {
@@ -317,15 +335,24 @@ public class NeoDevPlugin implements Plugin<Project> {
 
         // TODO: configure eclipse
 
-        var genSourcePatches = tasks.register("generateSourcePatches", GenerateSourcePatches.class, task -> {
-            task.getOriginalJar().set(applyAt.flatMap(ApplyAccessTransformer::getOutputJar));
+        var genCommonSourcePatches = tasks.register("generateCommonSourcePatches", GenerateSourcePatches.class, task -> {
+            task.getOriginalJar().set(splitMergedSources.flatMap(SplitMergedSources::getCommonJar));
             task.getModifiedSources().set(project.file("src/main/java"));
-            task.getPatchesJar().set(neoDevBuildDir.map(dir -> dir.file("source-patches.zip")));
+            task.getPatchesJar().set(neoDevBuildDir.map(dir -> dir.file("common-source-patches.zip")));
+        });
+        var genClientSourcePatches = tasks.register("generateClientSourcePatches", GenerateSourcePatches.class, task -> {
+            task.getOriginalJar().set(splitMergedSources.flatMap(SplitMergedSources::getClientJar));
+            task.getModifiedSources().set(project.file("src/main/java"));
+            task.getPatchesJar().set(neoDevBuildDir.map(dir -> dir.file("client-source-patches.zip")));
         });
 
-        var genPatches = tasks.register("genPatches", Copy.class, task -> {
-            task.from(project.zipTree(genSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)));
-            task.into(project.getRootProject().file("patches"));
+        var genPatches = tasks.register("genPatches", Sync.class, task -> {
+            task.from(project.zipTree(genCommonSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)), spec -> {
+                spec.into(commonPatchesFolder);
+            });
+            task.from(project.zipTree(genClientSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)), spec -> {
+                spec.into(clientPatchesFolder);
+            });
         });
 
         // TODO: signing?
@@ -394,6 +421,12 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.getMojmapJar().set(neoDevBuildDir.map(dir -> dir.file("remapped-server.jar")));
         });
 
+        var combinedPatchesFolder = neoDevBuildDir.map(dir -> dir.dir("patches_combined"));
+        var combinePatches = tasks.register("combinePatches", Sync.class, task -> {
+            task.into(combinedPatchesFolder);
+            task.from(commonPatchesFolder);
+            task.from(clientPatchesFolder);
+        });
         var binpatcherConfig = configurations.create("binpatcher", files -> {
             files.setCanBeConsumed(false);
             files.setCanBeResolved(true);
@@ -405,7 +438,8 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.classpath(binpatcherConfig);
             task.getCleanJar().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getCleanJoinedJar));
             task.getPatchedJar().set(tasks.named("jar", Jar.class).flatMap(Jar::getArchiveFile));
-            task.getPatches().set(patchesFolder);
+            task.getPatches().set(combinedPatchesFolder);
+            task.dependsOn(combinePatches);
             task.getMappings().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
             task.getOutputFile().set(neoDevBuildDir.map(dir -> dir.file("merged-binpatches.lzma")));
         });
@@ -413,7 +447,8 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.classpath(binpatcherConfig);
             task.getCleanJar().set(remapClientJar.flatMap(RemapJar::getMojmapJar));
             task.getPatchedJar().set(tasks.named("jar", Jar.class).flatMap(Jar::getArchiveFile));
-            task.getPatches().set(patchesFolder);
+            task.getPatches().set(combinedPatchesFolder);
+            task.dependsOn(combinePatches);
             task.getMappings().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
             task.getOutputFile().set(neoDevBuildDir.map(dir -> dir.file("client-binpatches.lzma")));
         });
@@ -421,7 +456,8 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.classpath(binpatcherConfig);
             task.getCleanJar().set(remapServerJar.flatMap(RemapJar::getMojmapJar));
             task.getPatchedJar().set(tasks.named("jar", Jar.class).flatMap(Jar::getArchiveFile));
-            task.getPatches().set(patchesFolder);
+            task.getPatches().set(combinedPatchesFolder);
+            task.dependsOn(combinePatches);
             task.getMappings().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
             task.getOutputFile().set(neoDevBuildDir.map(dir -> dir.file("server-binpatches.lzma")));
         });
@@ -598,8 +634,9 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.from(generateMergedBinPatches.flatMap(GenerateBinaryPatches::getOutputFile), spec -> {
                 spec.rename(s -> "joined.lzma");
             });
-            task.from(project.zipTree(genSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)), spec -> {
-                spec.into("patches/");
+            task.into("patches/", spec -> {
+                spec.from(project.zipTree(genCommonSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)));
+                spec.from(project.zipTree(genClientSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)));
             });
         });
 

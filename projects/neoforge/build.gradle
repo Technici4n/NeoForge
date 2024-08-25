@@ -30,6 +30,15 @@ sourceSets {
             srcDirs rootProject.file('src/main/resources'), rootProject.file('src/generated/resources')
         }
     }
+    client {
+        java {
+            srcDirs rootProject.file('src/client/java')
+        }
+        compileClasspath += main.compileClasspath
+        compileClasspath += main.output
+        runtimeClasspath += main.runtimeClasspath
+        runtimeClasspath += main.output
+    }
 }
 
 // TODO re-enable
@@ -64,8 +73,11 @@ sourceSets {
 
 neoForge {
     mods {
+        // TODO: problem!!! we don't want to include client in non-client runs,
+        // TODO: but the name of the "mod" must be minecraft for FML to work :(
         minecraft {
             sourceSet sourceSets.main
+            sourceSet sourceSets.client
         }
     }
 }
@@ -166,6 +178,7 @@ neoForge {
         }
         client {
             client()
+            sourceSet = sourceSets.client
         }
         server {
             server()
@@ -176,6 +189,7 @@ neoForge {
         //gameTestClient {} TODO: why? in userdev the normal client run type has gametests enabled
         data {
             data()
+            sourceSet = sourceSets.client
             programArguments.addAll '--mod', 'neoforge'
         }
     }
