@@ -11,6 +11,7 @@ import net.neoforged.moddevgradle.internal.PrepareRun;
 import net.neoforged.moddevgradle.internal.RunUtils;
 import net.neoforged.moddevgradle.internal.utils.DependencyUtils;
 import net.neoforged.moddevgradle.internal.utils.ExtensionUtils;
+import net.neoforged.neodev.installer.CreateArgsFile;
 import net.neoforged.neodev.installer.CreateInstallerProfile;
 import net.neoforged.neodev.installer.CreateLauncherProfile;
 import net.neoforged.neodev.installer.InstallerProcessor;
@@ -37,6 +38,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class NeoDevPlugin implements Plugin<Project> {
@@ -284,6 +286,7 @@ public class NeoDevPlugin implements Plugin<Project> {
                     return results.stream().map(r -> r.getFile().getName()).toList();
                 }));
                 task.getIgnoreList().addAll("client-extra", "neoforge-");
+                // TODO: userdevCompileOnly needs to be added here too
                 task.getUserDevConfig().set(neoDevBuildDir.map(dir -> dir.file("neodev-userdev-config.json")));
             });
         }
@@ -376,6 +379,7 @@ public class NeoDevPlugin implements Plugin<Project> {
 
             var cleanArtifactsDir = neoDevBuildDir.map(dir -> dir.dir("artifacts/clean"));
             task.getCleanClientJar().set(cleanArtifactsDir.map(dir -> dir.file("client.jar")));
+            task.getRawServerJar().set(cleanArtifactsDir.map(dir -> dir.file("raw-server.jar")));
             task.getCleanServerJar().set(cleanArtifactsDir.map(dir -> dir.file("server.jar")));
             task.getCleanJoinedJar().set(cleanArtifactsDir.map(dir -> dir.file("joined.jar")));
             task.getMergedMappings().set(cleanArtifactsDir.map(dir -> dir.file("merged-mappings.txt")));
@@ -397,6 +401,13 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.getObfSlimJar().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getCleanClientJar));
             task.getMergedMappings().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
             task.getMojmapJar().set(neoDevBuildDir.map(dir -> dir.file("remapped-client.jar")));
+        });
+        var remapServerJar = tasks.register("remapServerJar", RemapJar.class, task -> {
+            task.classpath(fartConfig);
+            task.getMainClass().set("net.neoforged.art.Main");
+            task.getObfSlimJar().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getCleanServerJar));
+            task.getMergedMappings().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
+            task.getMojmapJar().set(neoDevBuildDir.map(dir -> dir.file("remapped-server.jar")));
         });
 
         var binpatcherConfig = configurations.create("binpatcher", files -> {
@@ -421,6 +432,14 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.getPatches().set(patchesFolder);
             task.getMappings().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
             task.getOutputFile().set(neoDevBuildDir.map(dir -> dir.file("client-binpatches.lzma")));
+        });
+        var generateServerBinPatches = tasks.register("generateServerBinPatches", GenerateBinaryPatches.class, task -> {
+            task.classpath(binpatcherConfig);
+            task.getCleanJar().set(remapServerJar.flatMap(RemapJar::getMojmapJar));
+            task.getPatchedJar().set(tasks.named("jar", Jar.class).flatMap(Jar::getArchiveFile));
+            task.getPatches().set(patchesFolder);
+            task.getMappings().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getMergedMappings));
+            task.getOutputFile().set(neoDevBuildDir.map(dir -> dir.file("server-binpatches.lzma")));
         });
 
         var createLauncherProfile = tasks.register("createLauncherProfile", CreateLauncherProfile.class, task -> {
@@ -482,11 +501,38 @@ public class NeoDevPlugin implements Plugin<Project> {
                 files.getDependencies().add(dependencyFactory.create(installerProcessor.gav));
             });
             installerProfileLibraries.extendsFrom(configuration);
+            // Each tool should resolve consistently with the full set of installed libraries.
+            configuration.shouldResolveConsistentlyWith(installerProfileLibraries);
             createInstallerProfile.configure(task -> {
                 task.getProcessorClasspaths().put(installerProcessor, configuration.getIncoming().getArtifacts().getResolvedArtifacts().map(results -> {
                     // Using .toList() fails with the configuration cache - looks like Gradle can't deserialize the resulting list?
                     return results.stream().map(DependencyUtils::guessMavenGav).collect(Collectors.toCollection(ArrayList::new));
                 }));
+            });
+        }
+
+        var createWindowsServerArgsFile = tasks.register("createWindowsServerArgsFile", CreateArgsFile.class, task -> {
+            task.getPathSeparator().set(";");
+            task.getArgsFile().set(neoDevBuildDir.map(dir -> dir.file("windows-server-args.txt")));
+        });
+        var createUnixServerArgsFile = tasks.register("createUnixServerArgsFile", CreateArgsFile.class, task -> {
+            task.getPathSeparator().set(":");
+            task.getArgsFile().set(neoDevBuildDir.map(dir -> dir.file("unix-server-args.txt")));
+        });
+
+        for (var taskProvider : List.of(createWindowsServerArgsFile, createUnixServerArgsFile)) {
+            taskProvider.configure(task -> {
+                task.getTemplate().set(project.getRootProject().file("server_files/args.txt"));
+                task.getFmlVersion().set(fmlVersion);
+                task.getMinecraftVersion().set(minecraftVersion);
+                task.getNeoForgeVersion().set(neoForgeVersion);
+                task.getRawNeoFormVersion().set(rawNeoFormVersion);
+                task.getModules().from(modulesConfiguration);
+                task.getIgnoreList().addAll(modulesConfiguration.getIncoming().getArtifacts().getResolvedArtifacts().map(results -> {
+                    return results.stream().map(r -> r.getFile().getName()).toList();
+                }));
+                task.getClasspath().from(installerConfiguration);
+                task.getRawServerJar().set(createCleanArtifacts.flatMap(CreateCleanArtifacts::getRawServerJar));
             });
         }
 
@@ -521,14 +567,31 @@ public class NeoDevPlugin implements Plugin<Project> {
             task.from(project.getRootProject().file("src/main/resources/neoforged_logo.png"), spec -> {
                 spec.rename(s -> "big_logo.png");
             });
-            // TODO: unix server args
-            // TODO: windows server args
+            task.from(createUnixServerArgsFile.flatMap(CreateArgsFile::getArgsFile), spec -> {
+                spec.into("data");
+                spec.rename(s -> "unix_args.txt");
+            });
+            task.from(createWindowsServerArgsFile.flatMap(CreateArgsFile::getArgsFile), spec -> {
+                spec.into("data");
+                spec.rename(s -> "win_args.txt");
+            });
             task.from(generateClientBinPatches.flatMap(GenerateBinaryPatches::getOutputFile), spec -> {
                 spec.into("data");
                 spec.rename(s -> "client.lzma");
             });
-            // TODO: server binary patches
-            // TODO: data
+            task.from(generateServerBinPatches.flatMap(GenerateBinaryPatches::getOutputFile), spec -> {
+                spec.into("data");
+                spec.rename(s -> "server.lzma");
+            });
+            var mavenPath = neoForgeVersion.map(v -> "net/neoforged/neoforge/" + v);
+            task.getInputs().property("mavenPath", mavenPath);
+            task.from(project.getRootProject().files("server_files"), spec -> {
+                spec.into("data");
+                spec.exclude("args.txt");
+                spec.filter(s -> {
+                    return s.replaceAll("@MAVEN_PATH@", mavenPath.get());
+                });
+            });
 
             // This is true by default (see gradle.properties), and needs to be disabled explicitly when building (see release.yml).
             if (project.getProperties().containsKey("neogradle.runtime.platform.installer.debug") && Boolean.parseBoolean(project.getProperties().get("neogradle.runtime.platform.installer.debug").toString())) {
@@ -541,7 +604,6 @@ public class NeoDevPlugin implements Plugin<Project> {
 
         var userdevJar = tasks.register("userdevJar", Jar.class, task -> {
             task.getArchiveClassifier().set("userdev");
-            // TODO: NG does a bunch of other configuration here that doesn't seem necessary?
 
             task.from(writeUserDevConfig.flatMap(WriteUserDevConfig::getUserDevConfig), spec -> {
                 spec.rename(s -> "config.json");

@@ -22,6 +22,9 @@ abstract class CreateCleanArtifacts extends NeoFormRuntimeTask {
     abstract RegularFileProperty getCleanClientJar();
 
     @OutputFile
+    abstract RegularFileProperty getRawServerJar();
+
+    @OutputFile
     abstract RegularFileProperty getCleanServerJar();
 
     @OutputFile
@@ -41,6 +44,7 @@ abstract class CreateCleanArtifacts extends NeoFormRuntimeTask {
                 "--neoform", "net.neoforged:neoform:%s@zip".formatted(artifactId),
                 "--dist", "joined",
                 "--write-result", "node.stripClient.output.output:" + getCleanClientJar().get().getAsFile().getAbsolutePath(),
+                "--write-result", "node.downloadServer.output.output:" + getRawServerJar().get().getAsFile().getAbsolutePath(),
                 "--write-result", "node.stripServer.output.output:" + getCleanServerJar().get().getAsFile().getAbsolutePath(),
                 "--write-result", "node.rename.output.output:" + getCleanJoinedJar().get().getAsFile().getAbsolutePath(),
                 "--write-result", "node.mergeMappings.output.output:" + getMergedMappings().get().getAsFile().getAbsolutePath()
