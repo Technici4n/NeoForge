@@ -342,17 +342,20 @@ public class NeoDevPlugin implements Plugin<Project> {
         });
         var genClientSourcePatches = tasks.register("generateClientSourcePatches", GenerateSourcePatches.class, task -> {
             task.getOriginalJar().set(splitMergedSources.flatMap(SplitMergedSources::getClientJar));
-            task.getModifiedSources().set(project.file("src/main/java"));
+            task.getModifiedSources().set(project.file("src/client/java"));
             task.getPatchesJar().set(neoDevBuildDir.map(dir -> dir.file("client-source-patches.zip")));
         });
 
-        var genPatches = tasks.register("genPatches", Sync.class, task -> {
-            task.from(project.zipTree(genCommonSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)), spec -> {
-                spec.into(commonPatchesFolder);
-            });
-            task.from(project.zipTree(genClientSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)), spec -> {
-                spec.into(clientPatchesFolder);
-            });
+        var copyCommonPatches = tasks.register("copyCommonPatches", Sync.class, task -> {
+            task.from(project.zipTree(genCommonSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)));
+            task.into(commonPatchesFolder);
+        });
+        var copyClientPatches = tasks.register("copyClientPatches", Sync.class, task -> {
+            task.from(project.zipTree(genClientSourcePatches.flatMap(GenerateSourcePatches::getPatchesJar)));
+            task.into(clientPatchesFolder);
+        });
+        var genPatches = tasks.register("genPatches", task -> {
+            task.dependsOn(copyCommonPatches, copyClientPatches);
         });
 
         // TODO: signing?
