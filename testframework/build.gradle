@@ -24,8 +24,8 @@ dependencies {
     // TODO: is this leaking in the POM? (most likely yes)
     // TODO: does this need to be changed back to runtimeDependencies?
     // TODO: should use attributes to resolve the right variant instead of hardcoding
-    compileOnly project(path: ':neoforge', configuration: 'apiElements')
-    runtimeOnly project(path: ':neoforge', configuration: 'runtimeElements')
+//    compileOnly project(path: ':neoforge', configuration: 'apiElements')
+//    runtimeOnly project(path: ':neoforge', configuration: 'runtimeElements')
 
     compileOnly(platform("org.junit:junit-bom:${project.jupiter_api_version}"))
     compileOnly "org.junit.jupiter:junit-jupiter-params"
@@ -37,8 +37,10 @@ dependencies {
 sourceSets {
     main {
         // TODO: cursed
-        compileClasspath += project(':neoforge').sourceSets.main.compileClasspath
-        runtimeClasspath += project(':neoforge').sourceSets.main.runtimeClasspath
+        compileClasspath += project(':neoforge').sourceSets.client.compileClasspath
+        compileClasspath += project(':neoforge').sourceSets.client.output
+        runtimeClasspath += project(':neoforge').sourceSets.client.runtimeClasspath
+        runtimeClasspath += project(':neoforge').sourceSets.client.output
     }
 }
 

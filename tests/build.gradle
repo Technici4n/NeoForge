@@ -45,7 +45,7 @@ configurations {
 }
 
 dependencies {
-    implementation project(path: ':neoforge', configuration: 'runtimeElements')
+//    implementation project(path: ':neoforge', configuration: 'runtimeElements')
     implementation(testframeworkProject)
 
     junitImplementation(platform("org.junit:junit-bom:${project.jupiter_api_version}"))
@@ -59,10 +59,18 @@ dependencies {
 }
 
 sourceSets {
+    junit {
+        // TODO: cursed
+        // TODO: this is just to make it compile, it doesn't actually work yet
+        compileClasspath += project(':neoforge').sourceSets.client.compileClasspath
+        compileClasspath += project(':neoforge').sourceSets.client.output
+    }
     main {
         // TODO: cursed
-        compileClasspath += project(':neoforge').sourceSets.main.compileClasspath
-        runtimeClasspath += project(':neoforge').sourceSets.main.runtimeClasspath
+        compileClasspath += project(':neoforge').sourceSets.client.compileClasspath
+        compileClasspath += project(':neoforge').sourceSets.client.output
+        runtimeClasspath += project(':neoforge').sourceSets.client.runtimeClasspath
+        runtimeClasspath += project(':neoforge').sourceSets.client.output
     }
 }
 
