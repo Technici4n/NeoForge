@@ -59,12 +59,7 @@ public final class ClientExtensionsManager {
         if (earlyInitialized) {
             throw new IllegalStateException("Duplicate early initialization of ClientExtensionsManager");
         }
-
         earlyInitialized = true;
-        BuiltInRegistries.BLOCK.forEach(block -> block.initializeClient(ext -> register(ext, BLOCK_EXTENSIONS, block)));
-        BuiltInRegistries.ITEM.forEach(item -> item.initializeClient(ext -> register(ext, ITEM_EXTENSIONS, item)));
-        BuiltInRegistries.MOB_EFFECT.forEach(mobEffect -> mobEffect.initializeClient(ext -> register(ext, MOB_EFFECT_EXTENSIONS, mobEffect)));
-        NeoForgeRegistries.FLUID_TYPES.forEach(fluidType -> fluidType.initializeClient(ext -> register(ext, FLUID_TYPE_EXTENSIONS, fluidType)));
     }
 
     public static void init() {

@@ -7,7 +7,7 @@
 +    @Deprecated
      public TextureAtlasSprite getParticleIcon(BlockState p_110883_) {
 -        return this.getBlockModel(p_110883_).getParticleIcon();
-+        return this.getBlockModel(p_110883_).getParticleIcon(net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
++        return this.getBlockModel(p_110883_).getParticleIcon(net.neoforged.neoforge.model.data.ModelData.EMPTY);
 +    }
 +
 +    public TextureAtlasSprite getTexture(BlockState p_110883_, net.minecraft.world.level.Level level, net.minecraft.core.BlockPos pos) {

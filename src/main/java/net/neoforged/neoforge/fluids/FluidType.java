@@ -42,7 +42,6 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.neoforged.neoforge.common.NeoForgeMod;
 import net.neoforged.neoforge.common.SoundAction;
 import net.neoforged.neoforge.common.SoundActions;
@@ -845,12 +844,6 @@ public class FluidType {
         ResourceLocation name = NeoForgeRegistries.FLUID_TYPES.getKey(this);
         return name != null ? name.toString() : "Unregistered FluidType";
     }
-
-    /**
-     * @deprecated Use {@link net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent} instead
-     */
-    @Deprecated(forRemoval = true, since = "1.21")
-    public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {}
 
     /**
      * The properties of the fluid. The simple forms of each property can

@@ -13,7 +13,7 @@
          int p_234389_
      ) {
 -        boolean flag = Minecraft.useAmbientOcclusion() && p_234382_.getLightEmission() == 0 && p_234381_.useAmbientOcclusion();
-+        tesselateBlock(p_234380_, p_234381_, p_234382_, p_234383_, p_234384_, p_234385_, p_234386_, p_234387_, p_234388_, p_234389_, net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
++        tesselateBlock(p_234380_, p_234381_, p_234382_, p_234383_, p_234384_, p_234385_, p_234386_, p_234387_, p_234388_, p_234389_, net.neoforged.neoforge.model.data.ModelData.EMPTY, null);
 +    }
 +    public void tesselateBlock(
 +        BlockAndTintGetter p_234380_,
@@ -26,7 +26,7 @@
 +        RandomSource p_234387_,
 +        long p_234388_,
 +        int p_234389_,
-+        net.neoforged.neoforge.client.model.data.ModelData modelData,
++        net.neoforged.neoforge.model.data.ModelData modelData,
 +        net.minecraft.client.renderer.RenderType renderType
 +    ) {
 +        boolean flag = Minecraft.useAmbientOcclusion() && switch(p_234381_.useAmbientOcclusion(p_234382_, modelData, renderType)) {
@@ -59,7 +59,7 @@
          long p_234399_,
          int p_234400_
      ) {
-+         tesselateWithAO(p_234391_, p_234392_, p_234393_, p_234394_, p_234395_, p_234396_, p_234397_, p_234398_, p_234399_, p_234400_, net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
++         tesselateWithAO(p_234391_, p_234392_, p_234393_, p_234394_, p_234395_, p_234396_, p_234397_, p_234398_, p_234399_, p_234400_, net.neoforged.neoforge.model.data.ModelData.EMPTY, null);
 +    }
 +    public void tesselateWithAO(
 +        BlockAndTintGetter p_234391_,
@@ -72,7 +72,7 @@
 +        RandomSource p_234398_,
 +        long p_234399_,
 +        int p_234400_,
-+        net.neoforged.neoforge.client.model.data.ModelData modelData,
++        net.neoforged.neoforge.model.data.ModelData modelData,
 +        net.minecraft.client.renderer.RenderType renderType
 +    ) {
          float[] afloat = new float[DIRECTIONS.length * 2];
@@ -108,7 +108,7 @@
          long p_234410_,
          int p_234411_
      ) {
-+        tesselateWithoutAO(p_234402_, p_234403_, p_234404_, p_234405_, p_234406_, p_234407_, p_234408_, p_234409_, p_234410_, p_234411_, net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
++        tesselateWithoutAO(p_234402_, p_234403_, p_234404_, p_234405_, p_234406_, p_234407_, p_234408_, p_234409_, p_234410_, p_234411_, net.neoforged.neoforge.model.data.ModelData.EMPTY, null);
 +    }
 +    public void tesselateWithoutAO(
 +        BlockAndTintGetter p_234402_,
@@ -121,7 +121,7 @@
 +        RandomSource p_234409_,
 +        long p_234410_,
 +        int p_234411_,
-+        net.neoforged.neoforge.client.model.data.ModelData modelData,
++        net.neoforged.neoforge.model.data.ModelData modelData,
 +        net.minecraft.client.renderer.RenderType renderType
 +    ) {
          BitSet bitset = new BitSet(3);
@@ -163,7 +163,7 @@
          int p_111075_,
          int p_111076_
      ) {
-+        renderModel(p_111068_, p_111069_, p_111070_, p_111071_, p_111072_, p_111073_, p_111074_, p_111075_, p_111076_, net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
++        renderModel(p_111068_, p_111069_, p_111070_, p_111071_, p_111072_, p_111073_, p_111074_, p_111075_, p_111076_, net.neoforged.neoforge.model.data.ModelData.EMPTY, null);
 +    }
 +
 +    public void renderModel(
@@ -176,7 +176,7 @@
 +        float p_111074_,
 +        int p_111075_,
 +        int p_111076_,
-+        net.neoforged.neoforge.client.model.data.ModelData modelData,
++        net.neoforged.neoforge.model.data.ModelData modelData,
 +        net.minecraft.client.renderer.RenderType renderType
 +    ) {
          RandomSource randomsource = RandomSource.create();

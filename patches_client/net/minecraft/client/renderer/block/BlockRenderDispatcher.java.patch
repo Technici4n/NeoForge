@@ -15,9 +15,9 @@
  
 +    @Deprecated //Forge: Model data parameter
      public void renderBreakingTexture(BlockState p_110919_, BlockPos p_110920_, BlockAndTintGetter p_110921_, PoseStack p_110922_, VertexConsumer p_110923_) {
-+         renderBreakingTexture(p_110919_, p_110920_, p_110921_, p_110922_, p_110923_, net.neoforged.neoforge.client.model.data.ModelData.EMPTY);
++         renderBreakingTexture(p_110919_, p_110920_, p_110921_, p_110922_, p_110923_, net.neoforged.neoforge.model.data.ModelData.EMPTY);
 +    }
-+    public void renderBreakingTexture(BlockState p_110919_, BlockPos p_110920_, BlockAndTintGetter p_110921_, PoseStack p_110922_, VertexConsumer p_110923_, net.neoforged.neoforge.client.model.data.ModelData modelData) {
++    public void renderBreakingTexture(BlockState p_110919_, BlockPos p_110920_, BlockAndTintGetter p_110921_, PoseStack p_110922_, VertexConsumer p_110923_, net.neoforged.neoforge.model.data.ModelData modelData) {
          if (p_110919_.getRenderShape() == RenderShape.MODEL) {
              BakedModel bakedmodel = this.blockModelShaper.getBlockModel(p_110919_);
              long i = p_110919_.getSeed(p_110920_);
@@ -37,7 +37,7 @@
 +            boolean p_234361_,
 +            RandomSource p_234362_
 +    ) {
-+        renderBatched(p_234356_, p_234357_, p_234358_, p_234359_, p_234360_, p_234361_, p_234362_, net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
++        renderBatched(p_234356_, p_234357_, p_234358_, p_234359_, p_234360_, p_234361_, p_234362_, net.neoforged.neoforge.model.data.ModelData.EMPTY, null);
      }
  
      public void renderBatched(
@@ -47,7 +47,7 @@
          boolean p_234361_,
 -        RandomSource p_234362_
 +        RandomSource p_234362_,
-+        net.neoforged.neoforge.client.model.data.ModelData modelData,
++        net.neoforged.neoforge.model.data.ModelData modelData,
 +        net.minecraft.client.renderer.RenderType renderType
      ) {
          try {
@@ -77,9 +77,9 @@
  
 +    @Deprecated //Forge: Model data and render type parameter
      public void renderSingleBlock(BlockState p_110913_, PoseStack p_110914_, MultiBufferSource p_110915_, int p_110916_, int p_110917_) {
-+        renderSingleBlock(p_110913_, p_110914_, p_110915_, p_110916_, p_110917_, net.neoforged.neoforge.client.model.data.ModelData.EMPTY, null);
++        renderSingleBlock(p_110913_, p_110914_, p_110915_, p_110916_, p_110917_, net.neoforged.neoforge.model.data.ModelData.EMPTY, null);
 +    }
-+    public void renderSingleBlock(BlockState p_110913_, PoseStack p_110914_, MultiBufferSource p_110915_, int p_110916_, int p_110917_, net.neoforged.neoforge.client.model.data.ModelData modelData, net.minecraft.client.renderer.RenderType renderType) {
++    public void renderSingleBlock(BlockState p_110913_, PoseStack p_110914_, MultiBufferSource p_110915_, int p_110916_, int p_110917_, net.neoforged.neoforge.model.data.ModelData modelData, net.minecraft.client.renderer.RenderType renderType) {
          RenderShape rendershape = p_110913_.getRenderShape();
          if (rendershape != RenderShape.INVISIBLE) {
              switch (rendershape) {

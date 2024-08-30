@@ -28,19 +28,11 @@
      public MobEffect setBlendDuration(int p_316265_) {
          this.blendDurationTicks = p_316265_;
          return this;
-@@ -181,8 +_,24 @@
+@@ -181,8 +_,16 @@
          return this.requiredFeatures;
      }
  
 -    static record AttributeTemplate(ResourceLocation id, double amount, AttributeModifier.Operation operation) {
-+    /**
-+     * Neo: Allowing mods to define client behavior for their MobEffects
-+     * @deprecated Use {@link net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent} instead
-+     */
-+    @Deprecated(forRemoval = true, since = "1.21")
-+    public void initializeClient(java.util.function.Consumer<net.neoforged.neoforge.client.extensions.common.IClientMobEffectExtensions> consumer) {
-+    }
-+
 +    static record AttributeTemplate(ResourceLocation id, double amount, AttributeModifier.Operation operation, @Nullable it.unimi.dsi.fastutil.ints.Int2DoubleFunction curve) {
 +
 +        public AttributeTemplate(ResourceLocation id, double amount, AttributeModifier.Operation operation) {
