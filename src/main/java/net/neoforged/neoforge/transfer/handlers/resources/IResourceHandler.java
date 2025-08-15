@@ -106,7 +106,7 @@ public interface IResourceHandler<T extends IResource> {
      * or if the caller prefers to deal in {@code int}s only.
      * <p>
      * This function serves as metadata only, and its result might be approximate.
-     * The only way to know if a handler will accept a resource, is to try to {@link #insert insert} it.
+     * The only way to know if a handler will accept a resource, is to try to {@linkplain #insert insert} it.
      *
      * @implNote This method should not be implemented. The default method will call {@link #getCapacity(int, IResource)} and convert the result appropriately.
      * @param index    The index to get the limit for.
@@ -124,7 +124,7 @@ public interface IResourceHandler<T extends IResource> {
      * irrespective of the current amount or resource currently at that index}
      * <p>
      * This method only provides a hint.
-     * The only way to find out whether a handler will accept a resource, is to try {@link #insert inserting} it.
+     * The only way to find out whether a handler will accept a resource, is to try {@linkplain #insert inserting} it.
      *
      * @param index    The index to check.
      * @param resource The resource to check. <strong>Must be non-empty.</strong>
