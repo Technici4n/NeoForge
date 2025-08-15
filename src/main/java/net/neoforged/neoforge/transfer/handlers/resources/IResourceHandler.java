@@ -123,7 +123,7 @@ public interface IResourceHandler<T extends IResource> {
      * {@return whether the given resource is generally allowed to be inserted at the given index,
      * irrespective of the current amount or resource currently at that index}
      * <p>
-     * This method only provides a hint, so the handler may still accept or reject resources regardless.
+     * This method only provides a hint.
      * The only way to find out whether a handler will accept a resource, is to try {@link #insert inserting} it.
      *
      * @param index    The index to check.
