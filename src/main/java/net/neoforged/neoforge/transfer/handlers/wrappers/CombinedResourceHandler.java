@@ -13,7 +13,7 @@ import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 /**
  * A resource handler that wraps multiple resource handlers, concatenating all their indices into one large handler.
  * <p>
- * <strong>This wrapper assumes that all internal handlers have a constant size.</strong>
+ * <strong>For this handler to work correctly, wrapped handlers must have a constant {@link IResourceHandler#size()}.</strong>
  */
 public class CombinedResourceHandler<T extends IResource> implements IResourceHandler<T> {
     protected final IResourceHandler<T>[] handlers; // the handlers
@@ -33,7 +33,9 @@ public class CombinedResourceHandler<T extends IResource> implements IResourceHa
         this.sizeCache = index;
     }
 
-    // returns the handler index for the index
+    /**
+     * Returns the index of the handler in {@link #handlers} that contains the given index.
+     */
     protected int getHandlerIndex(int index) {
         if (index < 0) throw new IndexOutOfBoundsException("Index " + index + " is out-of-bounds for combined handler with size " + sizeCache);
 
