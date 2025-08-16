@@ -13,16 +13,27 @@ import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 /**
  * A resource handler that wraps multiple resource handlers, concatenating all their indices into one large handler.
  * <p>
- * <strong>For this handler to work correctly, wrapped handlers must have a constant {@link IResourceHandler#size()}.</strong>
+ * The range of indices handled by each wrapped handler is assigned when the combined handler is created.
+ * <strong>As a result, later changes to a wrapped handlers size will not be reflected.</strong>
  */
 public class CombinedResourceHandler<T extends IResource> implements IResourceHandler<T> {
-    protected final IResourceHandler<T>[] handlers; // the handlers
-    protected final int[] baseIndex; // index-offsets of the different handlers
-    protected final int sizeCache; // number of total indices
+    /**
+     * The wrapped handlers.
+     */
+    protected final IResourceHandler<T>[] handlers;
+    /**
+     * For each wrapped handler, the index at which it starts in the combined handler.
+     */
+    protected final int[] baseIndex;
+    /**
+     * The total number of indices in the combined handler, which is the sum of the sizes of all wrapped handlers.
+     */
+    protected final int sizeCache;
 
     @SafeVarargs
     public CombinedResourceHandler(IResourceHandler<T>... handlers) {
-        if (handlers.length <= 1) throw new IllegalArgumentException("At least 2 handlers must be specified. Received: " + handlers.length);
+        if (handlers.length <= 1)
+            throw new IllegalArgumentException("At least 2 handlers must be specified. Received: " + handlers.length);
         this.handlers = handlers;
         this.baseIndex = new int[handlers.length];
         int index = 0;
@@ -37,7 +48,8 @@ public class CombinedResourceHandler<T extends IResource> implements IResourceHa
      * Returns the index of the handler in {@link #handlers} that contains the given index.
      */
     protected int getHandlerIndex(int index) {
-        if (index < 0) throw new IndexOutOfBoundsException("Index " + index + " is out-of-bounds for combined handler with size " + sizeCache);
+        if (index < 0)
+            throw new IndexOutOfBoundsException("Index " + index + " is out-of-bounds for combined handler with size " + sizeCache);
 
         for (int i = 0; i < baseIndex.length; i++) {
             if (index - baseIndex[i] < 0) {
