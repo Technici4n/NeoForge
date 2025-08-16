@@ -98,7 +98,7 @@ public final class ResourceHandlerUtil {
     }
 
     /**
-     * Calculates the redstone signal strength based on the given resource handlers content. This value is between 0 and 15.
+     * Calculates the redstone signal strength based on the given resource handler's content. This value is between 0 and 15.
      * <p>This method is based on {@link AbstractContainerMenu#getRedstoneSignalFromContainer(Container)}.
      *
      * @param handler the resource handler to calculate the signal from
