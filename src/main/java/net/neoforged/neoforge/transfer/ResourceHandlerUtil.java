@@ -425,10 +425,11 @@ public final class ResourceHandlerUtil {
      * @param transaction The transaction that this operation is part of.
      *                    This method will always use a nested transaction that will be rolled back.
      *                    {@code null} can be passed to conveniently have this method open its own root transaction.
-     * @return {@code true} if the handler has at least one resource that matches the filter and can be extracted, {@code false} otherwise.
+     * @return The first non-empty resource that matches the filter and is extractable, or {@code null} otherwise.
      * @param <T> The type of resource handled by the handler.
      */
-    public static <T extends IResource> boolean hasExtractableResource(
+    @Nullable
+    public static <T extends IResource> T findExtractableResource(
             IResourceHandler<T> handler,
             Predicate<T> filter,
             @Nullable TransactionContext transaction) {
@@ -437,10 +438,10 @@ public final class ResourceHandlerUtil {
             for (int index = 0; index < size; index++) {
                 T resource = handler.getResource(index);
                 if (!resource.isEmpty() && filter.test(resource) && handler.extract(resource, handler.getAmountAsInt(index), temp) > 0) {
-                    return true;
+                    return resource;
                 }
             }
-            return false;
+            return null;
         }
     }
 
