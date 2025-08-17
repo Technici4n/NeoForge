@@ -468,26 +468,4 @@ public final class ResourceHandlerUtil {
             return !resource.isEmpty() && filter.test(resource) && handler.extract(resource, handler.getAmountAsInt(index), temp) > 0;
         }
     }
-
-    /**
-     * Checks if at least one unit of the given resource can be extracted from the handler.
-     *
-     * <p>This method performs a simulated extraction of one unit inside
-     * a nested transaction that is always rolled back. Passing {@code null} for the transaction will let this method
-     * open (and close) its own root transaction.
-     *
-     * @param handler     The handler to check.
-     * @param resource    The resource to test extraction for. <strong>Must be non-empty.</strong>
-     * @param transaction The parent transaction context, or {@code null} to open a temporary root transaction.
-     * @param <T>         The type of resource handled.
-     * @return {@code true} if at least part of the resource can be extracted; {@code false} otherwise.
-     */
-    public static <T extends IResource> boolean hasExtractableResource(IResourceHandler<T> handler,
-            T resource,
-            @Nullable TransactionContext transaction) {
-        try (Transaction temp = Transaction.open(transaction)) {
-            //Simulated: we don't commit
-            return handler.extract(resource, 1, temp) > 0;
-        }
-    }
 }
