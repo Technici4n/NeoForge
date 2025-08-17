@@ -444,28 +444,4 @@ public final class ResourceHandlerUtil {
             return null;
         }
     }
-
-    /**
-     * Checks if the resource at the specified index matches the given filter and can be extracted.
-     *
-     * <p>This method performs a simulated extraction inside a nested transaction that is always rolled back.
-     * Passing {@code null} for the transaction will let this method open (and close) its own root transaction.
-     *
-     * @param handler     The handler containing the resource.
-     * @param filter      A filter applied to the (non-empty) resource at the given index.
-     * @param index       The index to check.
-     * @param transaction The parent transaction context, or {@code null} to open a temporary root transaction.
-     * @param <T>         The type of resource handled.
-     * @return {@code true} if the resource at the index is non-empty, matches the filter, and can be (at least partially) extracted; {@code false} otherwise.
-     */
-    public static <T extends IResource> boolean hasExtractableResourceAtIndex(IResourceHandler<T> handler,
-            Predicate<T> filter,
-            int index,
-            @Nullable TransactionContext transaction) {
-        try (Transaction temp = Transaction.open(transaction)) {
-            //Simulated: we don't commit
-            T resource = handler.getResource(index);
-            return !resource.isEmpty() && filter.test(resource) && handler.extract(resource, handler.getAmountAsInt(index), temp) > 0;
-        }
-    }
 }
