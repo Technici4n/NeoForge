@@ -5,7 +5,6 @@
 
 package net.neoforged.neoforge.transfer;
 
-import com.google.common.math.LongMath;
 import java.util.Objects;
 import java.util.function.Predicate;
 import net.minecraft.CrashReport;
@@ -170,7 +169,7 @@ public final class ResourceHandlerUtil {
      *
      * @param <T>         The type of resource handled by the handler
      * @param handler     The {@link IResourceHandler} to extract the resource from. Can be {@code null}, which makes this method a no-op.
-     * @param filter      The filter to apply to the resources
+     * @param filter      The first non-empty resource for which this filter returns {@code true} will be extracted.
      * @param amount      The desired amount of the resource to extract
      * @param transaction The transaction context for the operation.
      *                    Passing in {@code null} will open a root transaction, whereas passing in a transaction will
@@ -178,7 +177,7 @@ public final class ResourceHandlerUtil {
      * @return the resource and amount that was extracted or {@code null} if nothing was extracted
      */
     @Nullable
-    public static <T extends IResource> ResourceStack<T> extract(
+    public static <T extends IResource> ResourceStack<T> extractFirst(
             @Nullable IResourceHandler<T> handler,
             Predicate<T> filter,
             int amount,
@@ -308,24 +307,23 @@ public final class ResourceHandlerUtil {
     }
 
     /**
-     * Similar to {@link #move}, but transfers only the first type of resource that matches the filter and can be
+     * Similar to {@link #move}, but transfers only the first resource that matches the filter and can be
      * successfully transferred.
      *
      * @param from        The source handler. May be null.
      * @param to          The target handler. May be null.
      * @param filter      The filter for transferred resources.
      *                    Only resources for which this filter returns {@code true} will be transferred.
-     *                    This filter will never be tested with an empty resource, and filters are encouraged to throw an
-     *                    exception if this guarantee is violated.
+     *                    This filter will never be tested with an empty resource.
      * @param amount      The maximum amount that will be transferred.
      * @param transaction The transaction context for the operation.
      *                    Passing in {@code null} will open a root transaction, whereas passing in a transaction will
      *                    allow you to make the final decision to commit based on the results of this method.
      * @param <T>         the type of resource to move.
-     * @return a stack of type {@code <S>} typically in the form of an ResourceStack or as an example an ItemStack based on the factory provided
+     * @return the resource and amount that was transferred or {@code null} if nothing was transferred
      */
     @Nullable
-    public static <T extends IResource> ResourceStack<T> moveSingleResource(
+    public static <T extends IResource> ResourceStack<T> moveFirst(
             @Nullable IResourceHandler<T> from,
             @Nullable IResourceHandler<T> to,
             Predicate<T> filter,
